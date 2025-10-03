@@ -29,6 +29,8 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'firma_id' => \App\Models\Firma::factory(),
+            'role' => fake()->randomElement(['customer', 'developer']),
         ];
     }
 
@@ -39,6 +41,27 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Create a developer user.
+     */
+    public function developer(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'developer',
+            'firma_id' => null, // Developers don't belong to a specific firma
+        ]);
+    }
+
+    /**
+     * Create a customer user.
+     */
+    public function customer(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'customer',
         ]);
     }
 }
