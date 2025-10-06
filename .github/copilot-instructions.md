@@ -39,14 +39,33 @@ PATCH /tickets/{ticket} # Update ticket (role-based permissions)
 DELETE /tickets/{ticket} # Delete ticket (role-based permissions)
 ```
 
-### Controller Structure
+### Controller Structure & User Management
 - **FirmaController**: Developer-only firma management
-- **ProjectController**: Customer project management + developer oversight
+- **ProjectController**: Customer project management + developer oversight + **User Management**
+  - `users()` - Show project members + available users for assignment
+  - `addUser()` - Add users to projects (with firma validation)
+  - `removeUser()` - Remove users from projects (except creator)
+  - `availableUsers()` - API endpoint for AJAX user selection
 - **TicketController**: Role-based ticket operations with specialized methods:
-  - `index()` - All tickets (developers) vs firma tickets (customers)
+  - `index()` - Project-based tickets (customers) vs all tickets (developers)
   - `emergency()` - Priority 4 tickets for developers
   - `assign()` - Developer assignment functionality
   - `updateStatus()` - Workflow status changes
+
+### Project-User Management System
+- **Pivot Relationship**: `project_user` table manages many-to-many User ↔ Project
+- **Auto-Assignment**: Project creator automatically becomes project member
+- **Permission Levels**: Only project creators and developers can manage project users
+- **Firma Scoping**: Users can only be added to projects within their firma (except developers)
+- **Creator Protection**: Project creator cannot be removed from project
+- **Ticket Access**: Users see only tickets from projects they're members of
+
+### API Endpoints & AJAX Support
+```php
+GET /api/projects/{project}/available-users  # JSON list of assignable users
+POST /projects/{project}/users              # Add user to project
+DELETE /projects/{project}/users/{user}     # Remove user from project
+```
 
 ## Project Overview
 This is a Laravel-based technical support ticket system for digitalization tasks and bug reports. Built with Laravel 12, Livewire 3, Volt (single-file components), and Flux UI components.
@@ -86,7 +105,27 @@ $project->users() // BelongsToMany with pivot
 - Developers can edit all tickets, customers only their own within firma projects
 
 ### Security & Access Patterns
-- **Multi-tenant**: Customers isolated to their firma's data
+- **Multi-tenant**: Customers isolated to their firma's data via project membership
 - **Cross-tenant**: Developers have system-wide access
-- **Authorization**: Combine role checks with ownership validation
+- **Project-based Authorization**: 
+  - Ticket access: `$ticket->project->hasUser($user)` 
+  - Project management: Creator or Developer role required
+  - User assignment: Validated against firma membership
+- **Authorization Layers**: Role → Project Membership → Resource Ownership
 - **Route Model Binding**: Use with proper scoping for security
+
+### Model Helper Methods & Validation
+```php
+// Project access & user management
+$project->hasUser($user)              # Check project membership
+$project->users()                     # BelongsToMany relationship
+$firma->availableUsersForProject($project)  # Get assignable users
+
+// Ticket permissions (updated for project-based access)
+$ticket->canBeEditedBy($user)         # Developer OR project member
+$ticket->project->hasUser($user)      # Project membership check
+
+// User role helpers
+$user->role->isDeveloper()            # Cross-firma access
+$user->role->isCustomer()             # Firma-scoped access
+```

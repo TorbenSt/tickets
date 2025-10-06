@@ -50,6 +50,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
     Route::patch('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
     Route::delete('/tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy');
+    
+    // Project User Management (accessible by project creators and developers)
+    Route::get('/projects/{project}/users', [ProjectController::class, 'users'])->name('projects.users');
+    Route::post('/projects/{project}/users', [ProjectController::class, 'addUser'])->name('projects.add-user');
+    Route::delete('/projects/{project}/users/{user}', [ProjectController::class, 'removeUser'])->name('projects.remove-user');
+    
+    // API for user search in project context (for AJAX)
+    Route::get('/api/projects/{project}/available-users', [ProjectController::class, 'availableUsers'])->name('api.projects.available-users');
 });
 
 // Settings routes

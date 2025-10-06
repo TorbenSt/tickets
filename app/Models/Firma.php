@@ -43,4 +43,15 @@ class Firma extends Model
     {
         return $this->hasManyThrough(Ticket::class, Project::class);
     }
+
+    /**
+     * Get users available to be added to a project (excluding already assigned ones).
+     */
+    public function availableUsersForProject(Project $project)
+    {
+        return $this->users()
+            ->whereNotIn('id', $project->users->pluck('id'))
+            ->where('id', '!=', $project->created_by)
+            ->get();
+    }
 }

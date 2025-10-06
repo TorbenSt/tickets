@@ -15,6 +15,27 @@
                 <flux:navlist.group :heading="__('Platform')" class="grid">
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
                 </flux:navlist.group>
+
+                @if(auth()->user()->role->isDeveloper())
+                    <!-- Developer Navigation -->
+                    <flux:navlist.group :heading="__('Developer')" class="grid">
+                        <flux:navlist.item icon="ticket" :href="route('tickets.index')" :current="request()->routeIs('tickets.*')" wire:navigate>{{ __('Alle Tickets') }}</flux:navlist.item>
+                        <flux:navlist.item icon="exclamation-triangle" :href="route('tickets.emergency')" :current="request()->routeIs('tickets.emergency')" wire:navigate>{{ __('Notfall-Tickets') }}</flux:navlist.item>
+                        <flux:navlist.item icon="building-office" :href="route('firmas.index')" :current="request()->routeIs('firmas.*')" wire:navigate>{{ __('Firmen') }}</flux:navlist.item>
+                    </flux:navlist.group>
+                @endif
+
+                @if(auth()->user()->role->isCustomer())
+                    <!-- Customer Navigation -->
+                    <flux:navlist.group :heading="__('Projekte')" class="grid">
+                        <flux:navlist.item icon="folder" :href="route('projects.index')" :current="request()->routeIs('projects.*')" wire:navigate>{{ __('Meine Projekte') }}</flux:navlist.item>
+                        <flux:navlist.item icon="plus" :href="route('projects.create')" wire:navigate>{{ __('Neues Projekt') }}</flux:navlist.item>
+                    </flux:navlist.group>
+                    
+                    <flux:navlist.group :heading="__('Tickets')" class="grid">
+                        <flux:navlist.item icon="ticket" :href="route('tickets.index')" :current="request()->routeIs('tickets.*') && !request()->routeIs('tickets.create')" wire:navigate>{{ __('Meine Tickets') }}</flux:navlist.item>
+                    </flux:navlist.group>
+                @endif
             </flux:navlist>
 
             <flux:spacer />

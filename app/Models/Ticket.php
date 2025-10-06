@@ -70,8 +70,7 @@ class Ticket extends Model
      */
     public function canBeEditedBy(User $user): bool
     {
-        return $user->role->isDeveloper() || 
-            ($this->project->hasUser($user) && $this->created_by === $user->id);
+        return $user->role->isDeveloper() || $this->project->hasUser($user);
     }
 
     /**

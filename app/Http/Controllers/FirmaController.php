@@ -2,63 +2,115 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Firma;
+use Illuminate\Http\{RedirectResponse, Request};
+use Illuminate\View\View;
 
 class FirmaController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display all firmas (Developer only).
      */
-    public function index()
+    public function index(): View
     {
-        //
+        $firmas = Firma::withCount(['projects', 'users'])
+            ->latest()
+            ->paginate(20);
+
+        return view('firmas.index', compact('firmas'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Display the specified firma with projects and tickets.
      */
-    public function create()
+    public function show(Firma $firma): View
     {
-        //
+        $firma->load([
+            'projects' => function ($query) {
+                $query->withCount('tickets')->latest();
+            }
+        ]);
+
+        // Get recent tickets from this firma
+        $recentTickets = $firma->tickets()
+            ->with(['project', 'creator', 'assignee'])
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('firmas.show', compact('firma', 'recentTickets'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Show the form for creating a new firma (if needed).
      */
-    public function store(Request $request)
+    public function create(): View
     {
-        //
+        return view('firmas.create');
     }
 
     /**
-     * Display the specified resource.
+     * Store a newly created firma (if needed).
      */
-    public function show(string $id)
+    public function store(Request $request): RedirectResponse
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:firmas,name',
+            'email' => 'required|email|max:255|unique:firmas,email',
+            'phone' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+        ]);
+
+        $firma = Firma::create($validated);
+
+        return redirect()
+            ->route('firmas.show', $firma)
+            ->with('success', 'Firma wurde erfolgreich erstellt.');
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Show the form for editing the specified firma.
      */
-    public function edit(string $id)
+    public function edit(Firma $firma): View
     {
-        //
+        return view('firmas.edit', compact('firma'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified firma.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Firma $firma): RedirectResponse
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:firmas,name,' . $firma->id,
+            'email' => 'required|email|max:255|unique:firmas,email,' . $firma->id,
+            'phone' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+        ]);
+
+        $firma->update($validated);
+
+        return redirect()
+            ->route('firmas.show', $firma)
+            ->with('success', 'Firma wurde erfolgreich aktualisiert.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified firma.
      */
-    public function destroy(string $id)
+    public function destroy(Firma $firma): RedirectResponse
     {
-        //
+        // Check if firma has users or projects
+        if ($firma->users()->exists() || $firma->projects()->exists()) {
+            return back()->withErrors([
+                'firma' => 'Firma kann nicht gelöscht werden, da noch Benutzer oder Projekte zugeordnet sind.'
+            ]);
+        }
+
+        $firma->delete();
+
+        return redirect()
+            ->route('firmas.index')
+            ->with('success', 'Firma wurde erfolgreich gelöscht.');
     }
 }
