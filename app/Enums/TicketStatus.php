@@ -3,7 +3,8 @@
 namespace App\Enums;
 
 enum TicketStatus: string
-{
+{   
+    case OPEN = 'open';
     case TODO = 'todo';
     case IN_PROGRESS = 'in_progress';
     case REVIEW = 'review';
@@ -12,6 +13,7 @@ enum TicketStatus: string
     public function label(): string
     {
         return match ($this) {
+            self::OPEN => 'Benötigt Bestätigung',
             self::TODO => 'To Do',
             self::IN_PROGRESS => 'In Bearbeitung',
             self::REVIEW => 'Review',
@@ -22,6 +24,7 @@ enum TicketStatus: string
     public function color(): string
     {
         return match ($this) {
+            self::OPEN => 'orange',
             self::TODO => 'gray',
             self::IN_PROGRESS => 'blue',
             self::REVIEW => 'yellow',
