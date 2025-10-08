@@ -37,8 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/firmas', [FirmaController::class, 'index'])->name('firmas.index');
         Route::get('/firmas/{firma}', [FirmaController::class, 'show'])->name('firmas.show');
         
-        // Alle Tickets
-        Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+        // Developer-spezifische Ticket-Views
         Route::get('/tickets/emergency', [TicketController::class, 'emergency'])->name('tickets.emergency');
         
         // Ticket-Management
@@ -47,7 +46,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
     
     // Shared routes (beide Rollen)
+    Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
     Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+    Route::get('/tickets/{ticket}/edit', [TicketController::class, 'edit'])->name('tickets.edit');
     Route::patch('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
     Route::delete('/tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy');
     

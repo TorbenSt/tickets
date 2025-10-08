@@ -1,7 +1,7 @@
 <x-layouts.app title="Projekte">
     <div class="space-y-6">
         <!-- Header -->
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between bg-gray-50 p-5 rounded-lg">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Projekte</h1>
                 <p class="text-gray-600 mt-2">
@@ -51,8 +51,8 @@
                         @if($project->tickets_count > 0)
                             <div class="flex items-center space-x-4 text-sm text-gray-500">
                                 @php
-                                    $openTickets = $project->tickets()->where('status', \App\Enums\TicketStatus::Open)->count();
-                                    $inProgressTickets = $project->tickets()->where('status', \App\Enums\TicketStatus::InProgress)->count();
+                                    $openTickets = $project->tickets()->where('status', \App\Enums\TicketStatus::OPEN)->count();
+                                    $inProgressTickets = $project->tickets()->where('status', \App\Enums\TicketStatus::IN_PROGRESS)->count();
                                 @endphp
                                 @if($openTickets > 0)
                                     <span class="flex items-center">

@@ -1,7 +1,7 @@
 <x-layouts.app :title="$ticket->title">
     <div class="max-w-4xl space-y-6">
         <!-- Header -->
-        <div class="flex items-start justify-between">
+        <div class="flex items-start justify-between bg-gray-50 p-5 rounded-lg">
             <div class="flex-1">
                 <div class="flex items-center space-x-3">
                     <h1 class="text-3xl font-bold text-gray-900">{{ $ticket->title }}</h1>
@@ -69,7 +69,7 @@
                         <h3 class="text-lg font-medium text-gray-900">Beschreibung</h3>
                     </div>
                     <div class="px-6 py-5">
-                        <div class="prose max-w-none">
+                        <div class="prose max-w-none text-gray-900">
                             {!! nl2br(e($ticket->description)) !!}
                         </div>
                     </div>

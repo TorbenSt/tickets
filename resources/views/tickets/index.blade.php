@@ -1,7 +1,7 @@
 <x-layouts.app title="Tickets">
     <div class="space-y-6">
         <!-- Header -->
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between bg-gray-50 p-5 rounded-lg">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Tickets</h1>
                 <p class="text-gray-600 mt-2">

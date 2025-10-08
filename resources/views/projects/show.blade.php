@@ -1,7 +1,7 @@
 <x-layouts.app :title="$project->name">
     <div class="space-y-6">
         <!-- Header -->
-        <div class="flex items-start justify-between">
+        <div class="flex items-start justify-between bg-gray-50 p-5 rounded-lg">
             <div class="flex-1">
                 <h1 class="text-3xl font-bold text-gray-900">{{ $project->name }}</h1>
                 <p class="text-gray-600 mt-2">
