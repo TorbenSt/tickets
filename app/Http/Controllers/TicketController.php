@@ -85,9 +85,14 @@ class TicketController extends Controller
             abort(403, 'No access to this project.');
         }
 
+        // Status depends on who creates the ticket
+        $status = Auth::user()->role->isDeveloper() 
+            ? TicketStatus::OPEN  // Developer tickets need customer approval
+            : TicketStatus::TODO; // Customer tickets are pre-approved
+
         $ticket = Ticket::create([
             ...$validated,
-            'status' => TicketStatus::OPEN,
+            'status' => $status,
             'created_by' => Auth::id(),
         ]);
 
@@ -202,5 +207,56 @@ class TicketController extends Controller
         $ticket->update($validated);
 
         return back()->with('success', 'Ticket-Status wurde aktualisiert.');
+    }
+
+    /**
+     * Approve ticket (Customer only - for developer-created tickets).
+     */
+    public function approve(Ticket $ticket): RedirectResponse
+    {
+        // Only customers can approve tickets
+        if (!Auth::user()->role->isCustomer()) {
+            abort(403, 'Only customers can approve tickets.');
+        }
+
+        // Only approve tickets that are in "open" status (need confirmation)
+        if ($ticket->status !== TicketStatus::OPEN) {
+            abort(403, 'This ticket cannot be approved.');
+        }
+
+        // Ensure customer has access to this ticket's project
+        if (!$ticket->project->hasUser(Auth::user())) {
+            abort(403, 'No access to this ticket.');
+        }
+
+        $ticket->update(['status' => TicketStatus::TODO]);
+
+        return back()->with('success', 'Ticket wurde freigegeben und ist nun in Bearbeitung.');
+    }
+
+    /**
+     * Show pending approval tickets for customers.
+     */
+    public function pendingApproval(): View
+    {
+        // Only customers can see pending approval tickets
+        if (!Auth::user()->role->isCustomer()) {
+            abort(403, 'Access denied.');
+        }
+
+        $user = Auth::user();
+        $tickets = Ticket::with(['project', 'creator'])
+            ->where('status', TicketStatus::OPEN)
+            ->whereHas('project', function ($query) use ($user) {
+                $query->where(function ($subQuery) use ($user) {
+                    $subQuery->whereHas('users', function ($userQuery) use ($user) {
+                        $userQuery->where('user_id', $user->id);
+                    })->orWhere('created_by', $user->id);
+                });
+            })
+            ->latest()
+            ->paginate(20);
+
+        return view('tickets.pending-approval', compact('tickets'));
     }
 }

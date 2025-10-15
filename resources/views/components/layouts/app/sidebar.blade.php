@@ -33,22 +33,15 @@
                     </flux:navlist.group>
                     
                     <flux:navlist.group :heading="__('Tickets')" class="grid">
-                        <flux:navlist.item icon="ticket" :href="route('tickets.index')" :current="request()->routeIs('tickets.*') && !request()->routeIs('tickets.create')" wire:navigate>{{ __('Meine Tickets') }}</flux:navlist.item>
+                        <flux:navlist.item icon="ticket" :href="route('tickets.index')" :current="request()->routeIs('tickets.index')" wire:navigate>{{ __('Meine Tickets') }}</flux:navlist.item>
+                        <flux:navlist.item icon="clock" :href="route('tickets.pending-approval')" :current="request()->routeIs('tickets.pending-approval')" wire:navigate>{{ __('Zur Freigabe') }}</flux:navlist.item>
                     </flux:navlist.group>
                 @endif
             </flux:navlist>
 
             <flux:spacer />
 
-            <flux:navlist variant="outline">
-                <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                {{ __('Repository') }}
-                </flux:navlist.item>
-
-                <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                {{ __('Documentation') }}
-                </flux:navlist.item>
-            </flux:navlist>
+            
 
             <!-- Desktop User Menu -->
             <flux:dropdown class="hidden lg:block" position="bottom" align="start">

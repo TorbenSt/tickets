@@ -1,8 +1,8 @@
 <x-layouts.app :title="'Ticket bearbeiten • #' . $ticket->id">
     <div class="max-w-2xl mx-auto space-y-6">
         <!-- Header -->
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">Ticket bearbeiten</h1>
+        <div class="bg-gray-50 p-5 rounded-lg">
+            <h1 class="text-3xl font-bold text-gray-900 ">Ticket bearbeiten</h1>
             <p class="text-gray-600 mt-2">
                 #{{ $ticket->id }} • {{ $ticket->project->name }}
                 @if(auth()->user()->role->isDeveloper())

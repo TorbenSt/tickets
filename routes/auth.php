@@ -30,3 +30,8 @@ Route::middleware('auth')->group(function () {
 
 Route::post('logout', App\Livewire\Actions\Logout::class)
     ->name('logout');
+
+// Redirect GET requests to login page
+Route::get('logout', function () {
+    return redirect()->route('login');
+});

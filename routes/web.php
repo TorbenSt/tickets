@@ -29,6 +29,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         Route::get('/projects/{project}/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
         Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+        
+        // Customer-spezifische Ticket-Funktionen
+        Route::get('/tickets/pending-approval', [TicketController::class, 'pendingApproval'])->name('tickets.pending-approval');
+        Route::patch('/tickets/{ticket}/approve', [TicketController::class, 'approve'])->name('tickets.approve');
     });
     
     // Developer routes

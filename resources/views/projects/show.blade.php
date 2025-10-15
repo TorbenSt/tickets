@@ -77,12 +77,119 @@
         </div>
 
         <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Sidebar -->
+            
+                    <!-- Project Members -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-6 py-5 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-medium text-gray-900">Projekt-Mitglieder</h3>
+                            @if(auth()->user()->role->isDeveloper() || $project->created_by === auth()->id())
+                                <a 
+                                    href="{{ route('projects.users', $project) }}" 
+                                    wire:navigate
+                                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                >
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                                    </svg>
+                                    Verwalten
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <div class="px-6 py-5 space-y-3">
+                        @foreach($project->users as $user)
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-sm font-medium text-gray-600">
+                                            {{ substr($user->name, 0, 1) }}
+                                        </span>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-sm font-medium text-gray-900 truncate">{{ $user->name }}</div>
+                                        <div class="text-xs text-gray-500 truncate">{{ $user->email }}</div>
+                                    </div>
+                                </div>
+                                @if($user->id === $project->created_by)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        Creator
+                                    </span>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Project Statistics -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-6 py-5 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">Statistiken</h3>
+                    </div>
+                    
+                    <div class="px-6 py-5 space-y-4 text-gray-900">
+                        @foreach(\App\Enums\TicketStatus::cases() as $status)
+                            @php
+                                $count = $tickets->where('status', $status)->count();
+                            @endphp
+                            @if($count > 0)
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 rounded-full" style="background-color: {{ 
+                                            match($status->color()) {
+                                                'orange' => '#f97316',
+                                                'gray' => '#6b7280', 
+                                                'blue' => '#3b82f6',
+                                                'yellow' => '#eab308',
+                                                'green' => '#10b981',
+                                                default => '#6b7280'
+                                            }
+                                        }}"></div>
+                                        <span class="text-sm">{{ $status->label() }}</span>
+                                    </div>
+                                    <span class="text-sm font-medium">{{ $count }}</span>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+
+                @if(auth()->user()->role->isDeveloper())
+                    <!-- Firma Info -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-6 py-5 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">Firma</h3>
+                        </div>
+                        
+                        <div class="px-6 py-5 space-y-2">
+                            <div class="font-medium">{{ $project->firma->name }}</div>
+                            @if($project->firma->email)
+                                <div class="text-sm text-gray-600">{{ $project->firma->email }}</div>
+                            @endif
+                            @if($project->firma->phone)
+                                <div class="text-sm text-gray-600">{{ $project->firma->phone }}</div>
+                            @endif
+                            <div class="pt-2">
+                                <a 
+                                    href="{{ route('firmas.show', $project->firma) }}" 
+                                    wire:navigate
+                                    class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-900"
+                                >
+                                    Firma anzeigen
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
             <!-- Main Content -->
             <div class="lg:col-span-2 space-y-6">
                 <!-- Project Description -->
                 @if($project->description)
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="bg-white overflow-hidden shadow rounded-lg text-gray-900">
                         <div class="px-6 py-5 border-b border-gray-200">
                             <h3 class="text-lg font-medium text-gray-900">Projektbeschreibung</h3>
                         </div>
@@ -231,113 +338,7 @@
                 </div>
             </div>
 
-            <!-- Sidebar -->
-            <div class="space-y-6">
-                <!-- Project Members -->
-                <div class="bg-white overflow-hidden shadow rounded-lg">
-                    <div class="px-6 py-5 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-lg font-medium text-gray-900">Projekt-Mitglieder</h3>
-                            @if(auth()->user()->role->isDeveloper() || $project->created_by === auth()->id())
-                                <a 
-                                    href="{{ route('projects.users', $project) }}" 
-                                    wire:navigate
-                                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                >
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                                    </svg>
-                                    Verwalten
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                    
-                    <div class="px-6 py-5 space-y-3">
-                        @foreach($project->users as $user)
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-2">
-                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                                        <span class="text-sm font-medium text-gray-600">
-                                            {{ substr($user->name, 0, 1) }}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm font-medium">{{ $user->name }}</div>
-                                        <div class="text-xs text-gray-500">{{ $user->email }}</div>
-                                    </div>
-                                </div>
-                                @if($user->id === $project->created_by)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                        Creator
-                                    </span>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-
-                <!-- Project Statistics -->
-                <div class="bg-white overflow-hidden shadow rounded-lg">
-                    <div class="px-6 py-5 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">Statistiken</h3>
-                    </div>
-                    
-                    <div class="px-6 py-5 space-y-4">
-                        @foreach(\App\Enums\TicketStatus::cases() as $status)
-                            @php
-                                $count = $tickets->where('status', $status)->count();
-                            @endphp
-                            @if($count > 0)
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="w-3 h-3 rounded-full" style="background-color: {{ 
-                                            match($status->color()) {
-                                                'orange' => '#f97316',
-                                                'gray' => '#6b7280', 
-                                                'blue' => '#3b82f6',
-                                                'yellow' => '#eab308',
-                                                'green' => '#10b981',
-                                                default => '#6b7280'
-                                            }
-                                        }}"></div>
-                                        <span class="text-sm">{{ $status->label() }}</span>
-                                    </div>
-                                    <span class="text-sm font-medium">{{ $count }}</span>
-                                </div>
-                            @endif
-                        @endforeach
-                    </div>
-                </div>
-
-                @if(auth()->user()->role->isDeveloper())
-                    <!-- Firma Info -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="px-6 py-5 border-b border-gray-200">
-                            <h3 class="text-lg font-medium text-gray-900">Firma</h3>
-                        </div>
-                        
-                        <div class="px-6 py-5 space-y-2">
-                            <div class="font-medium">{{ $project->firma->name }}</div>
-                            @if($project->firma->email)
-                                <div class="text-sm text-gray-600">{{ $project->firma->email }}</div>
-                            @endif
-                            @if($project->firma->phone)
-                                <div class="text-sm text-gray-600">{{ $project->firma->phone }}</div>
-                            @endif
-                            <div class="pt-2">
-                                <a 
-                                    href="{{ route('firmas.show', $project->firma) }}" 
-                                    wire:navigate
-                                    class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-900"
-                                >
-                                    Firma anzeigen
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-            </div>
+            
         </div>
     </div>
 </x-layouts.app>
