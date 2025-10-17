@@ -20,6 +20,8 @@
 /projects/create       # Create new projects
 /projects/{project}    # View project details + tickets
 /projects/{project}/tickets/create  # Create tickets in own projects
+/tickets/pending-approval  # View developer-created tickets requiring approval
+PATCH /tickets/{ticket}/approve  # Approve tickets (OPEN → TODO)
 ```
 
 ### Developer Routes (`role:developer`)  
@@ -48,6 +50,8 @@ DELETE /tickets/{ticket} # Delete ticket (role-based permissions)
   - `availableUsers()` - API endpoint for AJAX user selection
 - **TicketController**: Role-based ticket operations with specialized methods:
   - `index()` - Project-based tickets (customers) vs all tickets (developers)
+  - `pendingApproval()` - Customer-only view for tickets requiring approval
+  - `approve()` - Customer approval workflow (OPEN → TODO status change)
   - `emergency()` - Priority 4 tickets for developers
   - `assign()` - Developer assignment functionality
   - `updateStatus()` - Workflow status changes
@@ -94,15 +98,15 @@ $project->users() // BelongsToMany with pivot
 
 ### Enums & Business Rules  
 - **TicketStatus**: open → todo → in_progress → review → done (Kanban workflow)
-  - `open` - Benötigt Bestätigung (orange)
-  - `todo` - To Do (gray) 
+  - `open` - Benötigt Bestätigung (orange) - Only for developer-created tickets
+  - `todo` - To Do (gray) - Customer-approved or customer-created tickets
   - `in_progress` - In Bearbeitung (blue)
   - `review` - Review (yellow)
   - `done` - Fertig (green)
 - **TicketPriority**: überprüfung (1) → normal (2) → asap (3) → notfall (4) with order() method
 - **UserRole**: customer (belongs to Firma) vs developer (cross-firma access)
   - `isDeveloper()` and `isCustomer()` helper methods
-- Developers can edit all tickets, customers only their own within firma projects
+- **Ticket Creation Logic**: Developer tickets start as OPEN (need approval), Customer tickets start as TODO (pre-approved)
 
 ### Security & Access Patterns
 - **Multi-tenant**: Customers isolated to their firma's data via project membership

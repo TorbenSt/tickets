@@ -18,6 +18,36 @@ yarn-error.log
 /auth.json
 /.fleet
 /.idea
+/.vscode
+/coverage
+
+# Database
+*.sqlite
+*.sqlite-journal
+database/*.sqlite
+database/*.sqlite-journal
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+*.swp
+*.swo
+
+# Logs
+/storage/logs/*.log
+
+# Cache
+/bootstrap/cache/*.php
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+
+# Backup files
+*.bak
+*.backup
 /.nova
 /.vscode
 /.zed
