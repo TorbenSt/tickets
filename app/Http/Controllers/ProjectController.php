@@ -31,7 +31,10 @@ class ProjectController extends Controller
                 ->paginate(20);
         }
 
-        return view('projects.index', compact('projects'));
+        // Check if this is an iframe request
+        $viewPath = request()->routeIs('iframe.*') ? 'iframe.projects.index' : 'projects.index';
+        
+        return view($viewPath, compact('projects'));
     }
 
     /**

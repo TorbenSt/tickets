@@ -85,4 +85,34 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
 });
 
+// iframe Integration Routes
+Route::prefix('iframe')->middleware(['iframe.auth', 'auth'])->group(function () {
+    
+    // iframe Dashboard - role-based redirect
+    Route::get('/', [App\Http\Controllers\IframeController::class, 'dashboard'])->name('iframe.dashboard');
+    
+    // Customer iframe routes
+    Route::middleware(['role:customer'])->group(function () {
+        Route::get('/projects', [ProjectController::class, 'index'])->name('iframe.projects.index');
+        Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('iframe.projects.show');
+        Route::get('/projects/{project}/tickets/create', [TicketController::class, 'create'])->name('iframe.tickets.create');
+        Route::post('/tickets', [TicketController::class, 'store'])->name('iframe.tickets.store');
+        Route::get('/tickets/pending-approval', [TicketController::class, 'pendingApproval'])->name('iframe.tickets.pending-approval');
+        Route::patch('/tickets/{ticket}/approve', [TicketController::class, 'approve'])->name('iframe.tickets.approve');
+    });
+    
+    // Developer iframe routes  
+    Route::middleware(['role:developer'])->group(function () {
+        Route::get('/tickets', [TicketController::class, 'index'])->name('iframe.tickets.index');
+        Route::get('/tickets/emergency', [TicketController::class, 'emergency'])->name('iframe.tickets.emergency');
+        Route::get('/firmas', [FirmaController::class, 'index'])->name('iframe.firmas.index');
+        Route::get('/firmas/{firma}', [FirmaController::class, 'show'])->name('iframe.firmas.show');
+    });
+    
+    // Shared iframe routes
+    Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('iframe.tickets.show');
+    Route::get('/tickets/{ticket}/edit', [TicketController::class, 'edit'])->name('iframe.tickets.edit');
+    Route::patch('/tickets/{ticket}', [TicketController::class, 'update'])->name('iframe.tickets.update');
+});
+
 require __DIR__.'/auth.php';
