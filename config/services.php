@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
@@ -35,4 +34,8 @@ return [
         ],
     ],
 
+    // iframe Integration
+    'iframe' => [
+        'api_key' => env('IFRAME_API_KEY'),
+    ],
 ];

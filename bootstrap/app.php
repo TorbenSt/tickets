@@ -12,9 +12,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Replace default CSRF middleware
+        $middleware->web(replace: [
+            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class => \App\Http\Middleware\VerifyCsrfToken::class,
+        ]);
+        
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'iframe.auth' => \App\Http\Middleware\IframeAuthMiddleware::class,
+            'iframe.csrf' => \App\Http\Middleware\IframeCSRFMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
