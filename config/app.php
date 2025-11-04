@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | iFrame Integration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for secure iFrame authentication and integration with
+    | external systems. The API key is used to validate requests.
+    |
+    */
+
+    'iframe_api_key' => env('IFRAME_API_KEY'),
+
 ];

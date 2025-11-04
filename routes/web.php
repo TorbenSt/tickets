@@ -136,4 +136,7 @@ Route::prefix('iframe')->middleware(['iframe.auth', 'iframe.csrf'])->group(funct
     Route::get('/api/projects/{project}/available-users', [ProjectController::class, 'availableUsers'])->name('iframe.api.projects.available-users');
 });
 
+// GET-basierte iFrame-Authentifizierung (public, außerhalb der auth-Middleware)
+Route::get('/iframe/login', [App\Http\Controllers\IframeLoginController::class, 'login'])->name('iframe.login');
+
 require __DIR__.'/auth.php';

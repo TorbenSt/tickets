@@ -28,6 +28,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'iframe_user_token',
         'firma_id',
         'role',
     ];
@@ -53,6 +54,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'iframe_token_created_at' => 'datetime',
+            'iframe_token_last_used' => 'datetime',
         ];
     }
 
@@ -125,21 +128,51 @@ class User extends Authenticatable
     }
 
     /**
-     * Generate a secure iframe token for auto-login
+     * Generate secure iframe user token
      */
-    public function createIframeToken(string $parentDomain, int $expiresInMinutes = 60): string
+    public function generateIframeUserToken(): string
     {
-        $domain = parse_url($parentDomain, PHP_URL_HOST);
-        
-        $token = $this->createToken('iframe-access', [
-            'iframe:access',
-            'domain:' . $domain
+        do {
+            $token = Str::random(64);
+        } while (self::where('iframe_user_token', $token)->exists());
+
+        $this->update([
+            'iframe_user_token' => $token,
+            'iframe_token_created_at' => now()
         ]);
         
-        // Set expiration
-        $token->accessToken->expires_at = now()->addMinutes($expiresInMinutes);
-        $token->accessToken->save();
-        
-        return $token->plainTextToken;
+        return $token;
+    }
+
+    /**
+     * Find user by iframe credentials with security checks
+     */
+    public static function findByIframeCredentials(string $token, string $email): ?User
+    {
+        return self::where('iframe_user_token', $token)
+                  ->where('email', $email)
+                  ->whereNotNull('iframe_user_token') // Token muss existieren
+                  ->with(['firma'])
+                  ->first();
+    }
+
+    /**
+     * Track token usage for security monitoring
+     */
+    public function markIframeTokenUsed(): void
+    {
+        $this->update(['iframe_token_last_used' => now()]);
+    }
+
+    /**
+     * Revoke iframe token (security feature)
+     */
+    public function revokeIframeToken(): void
+    {
+        $this->update([
+            'iframe_user_token' => null,
+            'iframe_token_created_at' => null,
+            'iframe_token_last_used' => null
+        ]);
     }
 }
