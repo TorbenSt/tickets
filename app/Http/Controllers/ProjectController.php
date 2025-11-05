@@ -23,9 +23,11 @@ class ProjectController extends Controller
                 ->latest()
                 ->paginate(20);
         } else {
-            // Customers see only their firma's projects
+            // Customers see only projects they are members of
             $projects = Project::with(['creator'])
-                ->where('firma_id', $user->firma_id)
+                ->whereHas('users', function ($query) use ($user) {
+                    $query->where('users.id', $user->id);
+                })
                 ->withCount('tickets')
                 ->latest()
                 ->paginate(20);
@@ -61,8 +63,7 @@ class ProjectController extends Controller
             'created_by' => Auth::id(),
         ]);
 
-        // Automatically add creator to project
-        $project->users()->attach(Auth::id());
+        // Creator is automatically added by ProjectObserver
 
         return redirect()
             ->route('projects.show', $project)
@@ -74,8 +75,10 @@ class ProjectController extends Controller
      */
     public function show(Project $project): View
     {
-        // Check access permissions
-        if (!$project->hasUser(Auth::user())) {
+        $user = Auth::user();
+        
+        // Check access permissions - Developers can access all projects, customers need membership
+        if (!$user->role->isDeveloper() && !$project->hasUser($user)) {
             abort(403, 'No access to this project.');
         }
 

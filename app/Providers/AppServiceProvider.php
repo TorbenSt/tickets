@@ -23,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+        
+        // Register model observers
+        \App\Models\Project::observe(\App\Observers\ProjectObserver::class);
     }
 
     /**

@@ -24,4 +24,16 @@ class FirmaFactory extends Factory
             'address' => fake()->address(),
         ];
     }
+
+    /**
+     * Create a firma with associated users.
+     */
+    public function withUsers(int $count = 3): static
+    {
+        return $this->afterCreating(function (\App\Models\Firma $firma) use ($count) {
+            \App\Models\User::factory($count)->customer()->create([
+                'firma_id' => $firma->id,
+            ]);
+        });
+    }
 }

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{FirmaController, ProjectController, TicketController};
+use App\Http\Controllers\{FirmaController, ProjectController, TicketController, UserController};
 use Illuminate\Support\Facades\{Auth, Route};
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
@@ -24,11 +24,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
         Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
         Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
-        Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
         Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
         
         Route::get('/projects/{project}/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
-        Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
         
         // Customer-spezifische Ticket-Funktionen
         Route::get('/tickets/pending-approval', [TicketController::class, 'pendingApproval'])->name('tickets.pending-approval');
@@ -44,13 +42,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Developer-spezifische Ticket-Views
         Route::get('/tickets/emergency', [TicketController::class, 'emergency'])->name('tickets.emergency');
         
+        // Ticket creation for developers (shared route will be available for both)
+        
         // Ticket-Management
         Route::patch('/tickets/{ticket}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
         Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])->name('tickets.update-status');
+        
+        // Admin routes for user management
+        Route::get('/admin/users/{user}/token', [UserController::class, 'showToken'])->name('admin.users.token');
     });
     
-    // Shared routes (beide Rollen)
+    // Shared routes (beide Rollen) - aber mit unterschiedlicher Logik im Controller
+    Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+    Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
     Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
     Route::get('/tickets/{ticket}/edit', [TicketController::class, 'edit'])->name('tickets.edit');
     Route::patch('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');

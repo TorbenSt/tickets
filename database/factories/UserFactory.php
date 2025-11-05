@@ -64,4 +64,16 @@ class UserFactory extends Factory
             'role' => 'customer',
         ]);
     }
+
+    /**
+     * Create a user with iframe token.
+     */
+    public function withIframeToken(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'iframe_user_token' => Hash::make(Str::random(40)), // bcrypt hash (60 chars)
+            'iframe_token_created_at' => now(),
+            'iframe_token_last_used' => now()->subMinutes(fake()->numberBetween(1, 60)),
+        ]);
+    }
 }

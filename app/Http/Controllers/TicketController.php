@@ -13,27 +13,79 @@ class TicketController extends Controller
     /**
      * Display a listing of tickets based on user role.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $user = Auth::user();
         
         if ($user->role->isDeveloper()) {
             // Developers see all tickets system-wide
-            $tickets = Ticket::with(['project.firma', 'creator', 'assignee'])
-                ->latest()
-                ->paginate(20);
+            $query = Ticket::with(['project.firma', 'creator', 'assignee']);
+            
+            // Status filtering
+            if ($request->filled('status')) {
+                $query->where('status', $request->get('status'));
+            }
+            
+            // Assignment filtering
+            if ($request->filled('assigned_to')) {
+                $query->where('assigned_to', $request->get('assigned_to'));
+            }
+            
+            // Priority filtering
+            if ($request->filled('priority')) {
+                $query->where('priority', $request->get('priority'));
+            }
+            
+            // Search functionality for developers
+            if ($request->filled('search')) {
+                $searchTerm = $request->get('search');
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('title', 'like', "%{$searchTerm}%")
+                      ->orWhere('description', 'like', "%{$searchTerm}%")
+                      ->orWhereHas('project', function ($projectQuery) use ($searchTerm) {
+                          $projectQuery->where('name', 'like', "%{$searchTerm}%");
+                      })
+                      ->orWhereHas('project.firma', function ($firmaQuery) use ($searchTerm) {
+                          $firmaQuery->where('name', 'like', "%{$searchTerm}%");
+                      });
+                });
+            }
+            
+            $tickets = $query->latest()->paginate(20);
         } else {
             // Customers see only tickets from projects they have access to
-            $tickets = Ticket::with(['project', 'creator', 'assignee'])
+            $query = Ticket::with(['project', 'creator', 'assignee'])
                 ->whereHas('project', function ($query) use ($user) {
                     $query->where(function ($subQuery) use ($user) {
                         $subQuery->whereHas('users', function ($userQuery) use ($user) {
                             $userQuery->where('user_id', $user->id);
                         })->orWhere('created_by', $user->id);
                     });
-                })
-                ->latest()
-                ->paginate(20);
+                });
+            
+            // Status filtering for customers
+            if ($request->filled('status')) {
+                $query->where('status', $request->get('status'));
+            }
+            
+            // Priority filtering for customers
+            if ($request->filled('priority')) {
+                $query->where('priority', $request->get('priority'));
+            }
+            
+            // Search functionality for customers
+            if ($request->filled('search')) {
+                $searchTerm = $request->get('search');
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('title', 'like', "%{$searchTerm}%")
+                      ->orWhere('description', 'like', "%{$searchTerm}%")
+                      ->orWhereHas('project', function ($projectQuery) use ($searchTerm) {
+                          $projectQuery->where('name', 'like', "%{$searchTerm}%");
+                      });
+                });
+            }
+            
+            $tickets = $query->latest()->paginate(20);
         }
 
         return view('tickets.index', compact('tickets'));
@@ -42,12 +94,27 @@ class TicketController extends Controller
     /**
      * Show emergency tickets (Developer only).
      */
-    public function emergency(): View
+    public function emergency(Request $request): View
     {
-        $tickets = Ticket::with(['project.firma', 'creator', 'assignee'])
-            ->where('priority', TicketPriority::NOTFALL)
-            ->latest()
-            ->paginate(20);
+        $query = Ticket::with(['project.firma', 'creator', 'assignee'])
+            ->where('priority', TicketPriority::NOTFALL);
+            
+        // Search functionality
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%")
+                  ->orWhereHas('project', function ($projectQuery) use ($searchTerm) {
+                      $projectQuery->where('name', 'like', "%{$searchTerm}%");
+                  })
+                  ->orWhereHas('project.firma', function ($firmaQuery) use ($searchTerm) {
+                      $firmaQuery->where('name', 'like', "%{$searchTerm}%");
+                  });
+            });
+        }
+        
+        $tickets = $query->latest()->paginate(20);
 
         return view('tickets.emergency', compact('tickets'));
     }
@@ -137,14 +204,28 @@ class TicketController extends Controller
             abort(403, 'No permission to edit this ticket.');
         }
 
-        $validated = $request->validate([
+        $user = Auth::user();
+        
+        // Base validation rules
+        $rules = [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'priority' => 'required|in:' . implode(',', array_column(TicketPriority::cases(), 'value')),
-            'status' => 'required|in:' . implode(',', array_column(TicketStatus::cases(), 'value')),
             'estimated_hours' => 'nullable|numeric|min:0',
             'actual_hours' => 'nullable|numeric|min:0',
-        ]);
+        ];
+        
+        // Only developers can change status through this form
+        if ($user->role->isDeveloper()) {
+            $rules['status'] = 'required|in:' . implode(',', array_column(TicketStatus::cases(), 'value'));
+        }
+
+        $validated = $request->validate($rules);
+        
+        // If customer, preserve current status
+        if (!$user->role->isDeveloper()) {
+            $validated['status'] = $ticket->status->value;
+        }
 
         $ticket->update($validated);
 
@@ -237,7 +318,7 @@ class TicketController extends Controller
     /**
      * Show pending approval tickets for customers.
      */
-    public function pendingApproval(): View
+    public function pendingApproval(Request $request): View
     {
         // Only customers can see pending approval tickets
         if (!Auth::user()->role->isCustomer()) {
@@ -245,7 +326,7 @@ class TicketController extends Controller
         }
 
         $user = Auth::user();
-        $tickets = Ticket::with(['project', 'creator'])
+        $query = Ticket::with(['project', 'creator'])
             ->where('status', TicketStatus::OPEN)
             ->whereHas('project', function ($query) use ($user) {
                 $query->where(function ($subQuery) use ($user) {
@@ -253,9 +334,21 @@ class TicketController extends Controller
                         $userQuery->where('user_id', $user->id);
                     })->orWhere('created_by', $user->id);
                 });
-            })
-            ->latest()
-            ->paginate(20);
+            });
+            
+        // Search functionality
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%")
+                  ->orWhereHas('project', function ($projectQuery) use ($searchTerm) {
+                      $projectQuery->where('name', 'like', "%{$searchTerm}%");
+                  });
+            });
+        }
+        
+        $tickets = $query->latest()->paginate(20);
 
         return view('tickets.pending-approval', compact('tickets'));
     }

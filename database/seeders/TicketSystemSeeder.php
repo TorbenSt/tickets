@@ -18,10 +18,15 @@ class TicketSystemSeeder extends Seeder
             ->count(3)
             ->create();
 
-        // Create firmas
-        $firmas = \App\Models\Firma::factory()->count(5)->create();
+        // Create firmas with unique names using sequences
+        $firmaNames = ['TechCorp', 'InnovateSoft', 'DigitalWorks', 'FutureTech', 'SmartSolutions'];
+        $firmas = collect();
+        
+        foreach ($firmaNames as $name) {
+            $firmas->push(\App\Models\Firma::factory()->create(['name' => $name]));
+        }
 
-        // Create users for each firma
+        // Create users and projects for each firma
         foreach ($firmas as $firma) {
             $users = \App\Models\User::factory()
                 ->customer()
@@ -30,26 +35,45 @@ class TicketSystemSeeder extends Seeder
 
             // Create projects for this firma
             foreach ($users->take(2) as $user) {
-                $projects = \App\Models\Project::factory()
-                    ->count(rand(1, 3))
-                    ->create([
+                $projectCount = rand(1, 3);
+                for ($i = 0; $i < $projectCount; $i++) {
+                    // Create project with proper relationships
+                    $project = \App\Models\Project::factory()->create([
                         'firma_id' => $firma->id,
                         'created_by' => $user->id,
                     ]);
+                    
+                    // Ensure creator is added to project users (Observer should handle this)
+                    $project->users()->syncWithoutDetaching([$project->created_by]);
+                    
+                    // Add additional users to project
+                    $additionalUsers = $users->whereNotIn('id', [$user->id])
+                                           ->random(min(2, $users->count() - 1));
+                    $project->users()->syncWithoutDetaching($additionalUsers->pluck('id'));
 
-                // Give some users access to projects
-                foreach ($projects as $project) {
-                    $projectUsers = $users->random(rand(1, min(3, $users->count())));
-                    $project->users()->attach($projectUsers);
-
-                    // Create tickets for each project
-                    \App\Models\Ticket::factory()
-                        ->count(rand(5, 15))
-                        ->create([
-                            'project_id' => $project->id,
-                            'created_by' => $projectUsers->random()->id,
-                            'assigned_to' => rand(0, 1) ? $developers->random()->id : null,
-                        ]);
+                    // Create tickets for this project
+                    $ticketCount = rand(5, 15);
+                    $projectUsers = $project->users;
+                    
+                    for ($j = 0; $j < $ticketCount; $j++) {
+                        $creator = $projectUsers->random();
+                        $isDeveloperTicket = rand(0, 3) === 0; // 25% developer tickets
+                        
+                        if ($isDeveloperTicket && $developers->count() > 0) {
+                            // Developer-created ticket (starts as OPEN)
+                            \App\Models\Ticket::factory()->byDeveloper()->create([
+                                'project_id' => $project->id,
+                                'assigned_to' => rand(0, 1) ? $developers->random()->id : null,
+                            ]);
+                        } else {
+                            // Customer-created ticket (starts as TODO)
+                            \App\Models\Ticket::factory()->byCustomer()->create([
+                                'project_id' => $project->id,
+                                'created_by' => $creator->id,
+                                'assigned_to' => rand(0, 1) ? $developers->random()->id : null,
+                            ]);
+                        }
+                    }
                 }
             }
         }

@@ -11,11 +11,20 @@ class FirmaController extends Controller
     /**
      * Display all firmas (Developer only).
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $firmas = Firma::withCount(['projects', 'users'])
-            ->latest()
-            ->paginate(20);
+        $query = Firma::withCount(['projects', 'users']);
+        
+        // Search functionality
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%");
+            });
+        }
+        
+        $firmas = $query->latest()->paginate(20);
 
         return view('firmas.index', compact('firmas'));
     }
