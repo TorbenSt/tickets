@@ -175,4 +175,26 @@ class User extends Authenticatable
             'iframe_token_last_used' => null
         ]);
     }
+
+    /**
+     * Developer brauchen keine Firma-Zuordnung
+     */
+    public function requiresFirma(): bool
+    {
+        return $this->role === UserRole::CUSTOMER;
+    }
+
+    /**
+     * Validierung ob User korrekt konfiguriert ist
+     */
+    public function isProperlyConfigured(): bool
+    {
+        // Developer: Firma optional
+        if ($this->role === UserRole::DEVELOPER) {
+            return true;
+        }
+        
+        // Customer: Firma required
+        return $this->firma_id !== null;
+    }
 }

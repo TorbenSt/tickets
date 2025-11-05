@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
 
         User::factory()->developer()->create([
             'name' => 'Test Developer',
-            'email' => 'developer@example.com',
+            'email' => 'testdev@example.com',
         ]);
 
         // Run the ticket system seeder

@@ -12,11 +12,21 @@ class TicketSystemSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create developers
+        // Create main developer with iframe token (without firma_id)
+        $mainDeveloper = \App\Models\User::factory()->developer()->create([
+            'name' => 'Max Developer',
+            'email' => 'developer@example.com',
+            'iframe_user_token' => 'O3bAf7I79A3aplTCKW2v33kNrrlxdK3up8ZYIBjgiINbootbUjyZxbrPg5cCEPp2',
+            'firma_id' => null, // Explizit null für Developer
+        ]);
+
+        // Create additional developers
         $developers = \App\Models\User::factory()
             ->developer()
-            ->count(3)
+            ->count(2)
             ->create();
+            
+        $developers->prepend($mainDeveloper);
 
         // Create firmas with unique names using sequences
         $firmaNames = ['TechCorp', 'InnovateSoft', 'DigitalWorks', 'FutureTech', 'SmartSolutions'];
