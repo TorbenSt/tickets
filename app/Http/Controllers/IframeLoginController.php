@@ -103,9 +103,12 @@ class IframeLoginController extends Controller
             }
         }
 
-        if (!$user->firma) {
-            Log::error('User without firma tried iframe login', [
+        // Prüfe User-Konfiguration (Developer brauchen keine Firma)
+        if (!$user->isProperlyConfigured()) {
+            Log::error('User configuration error during iframe login', [
                 'user_id' => $user->id,
+                'role' => $user->role->value,
+                'has_firma' => $user->firma !== null,
                 'ip' => $request->ip()
             ]);
             return response('User configuration error', 500);
@@ -115,7 +118,8 @@ class IframeLoginController extends Controller
         Log::info('Successful iframe login', [
             'user_id' => $user->id,
             'email' => $user->email,
-            'firma' => $user->firma->name,
+            'role' => $user->role->value,
+            'firma' => $user->firma ? $user->firma->name : null,
             'ip' => $request->ip()
         ]);
 
@@ -128,10 +132,15 @@ class IframeLoginController extends Controller
         // User einloggen
         Auth::login($user, true);
 
-        // Weiterleitung basierend auf Rolle
+        // Weiterleitung basierend auf Rolle (zu iFrame-Routen)
         $redirectUrl = $request->get('redirect');
         if (!$redirectUrl) {
-            $redirectUrl = $user->role->isDeveloper() ? '/tickets' : '/projects';
+            $redirectUrl = $user->role->isDeveloper() ? '/iframe/tickets' : '/iframe/projects';
+        }
+        
+        // Sicherstellen, dass wir zu iFrame-Routen weiterleiten
+        if (!str_starts_with($redirectUrl, '/iframe/')) {
+            $redirectUrl = '/iframe' . $redirectUrl;
         }
 
         return redirect($redirectUrl);
