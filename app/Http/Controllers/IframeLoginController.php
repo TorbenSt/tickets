@@ -132,6 +132,9 @@ class IframeLoginController extends Controller
         // User einloggen
         Auth::login($user, true);
 
+        // Set iframe session flag für die iframe.auth Middleware
+        session(['is_iframe' => true, 'iframe_token' => $request->token]);
+
         // Weiterleitung basierend auf Rolle (zu iFrame-Routen)
         $redirectUrl = $request->get('redirect');
         if (!$redirectUrl) {
