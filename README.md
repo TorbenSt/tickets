@@ -1,193 +1,166 @@
-# Ticket System
+# Tickets – Laravel Support Ticket System
 
-Ein Laravel-basiertes Technical Support Ticket System für Digitalisierungsaufgaben und Bug Reports.
+![PHP](https://img.shields.io/badge/PHP-8.2-blue)
+![Laravel](https://img.shields.io/badge/Laravel-12-red)
+![Tests](https://img.shields.io/badge/tests-passing-success)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-## 🚀 Technologie Stack
+Tickets is a Laravel-based support ticket system demonstrating a clean,
+maintainable and idiomatic Laravel application.
 
-- **Laravel 12.32.5** - PHP Framework
-- **Livewire 3** - Full-stack Framework für Laravel
-- **Tailwind CSS 4.1.11** - Utility-first CSS Framework
-- **SQLite** - Leichtgewichtige Datenbank für Entwicklung
-- **Vite** - Frontend Build Tool
+The project focuses on clarity, structure and reliability, intentionally
+avoiding unnecessary complexity or overengineering.
 
-## 📋 Features
+---
 
-### Rollenbasierte Zugriffskontrolle
-- **Developer**: Systemweiter Zugriff auf alle Tickets und Firmen
-- **Customer**: Zugriff nur auf eigene Firma-Projekte und Tickets
+## Project Purpose
 
-### Ticket-Workflow mit Freigabeprozess
-- **Developer erstellt Ticket** → Status "Benötigt Bestätigung" (OPEN)
-- **Customer sieht Tickets zur Freigabe** → Kann Tickets freigeben
-- **Customer erstellt Ticket** → Status "To Do" (TODO) - automatisch freigegeben
-- **Kanban-Workflow**: OPEN → TODO → IN_PROGRESS → REVIEW → DONE
+This repository serves as a reference implementation for:
 
-### Projekt- und User-Management
-- Multi-Tenant Architektur mit Firma-basierter Isolation
-- Projekt-Mitglieder Management mit Pivot-Tabelle
-- Nur Projekt-Ersteller und Developer können User verwalten
+- classic CRUD workflows
+- authenticated user interactions
+- state-based ticket handling
+- clean Laravel conventions and project structure
 
-### Prioritäts-System
-- **Überprüfung** (1) - Allgemeine Anfragen
-- **Normal** (2) - Standard Features/Bugs  
-- **ASAP** (3) - Wichtige Features/Bugs
-- **Notfall** (4) - Kritische Probleme, Sicherheit, Ausfälle
+It is designed to show how a simple business problem can be implemented
+in a clear and maintainable way.
 
-## 🏗️ Architektur
+---
 
-### Database Schema
-```
-Users (id, name, email, firma_id, role)
-├── Firmas (id, name, email, phone)
-├── Projects (id, name, description, firma_id, created_by)
-│   └── project_user (project_id, user_id) [Pivot]
-└── Tickets (id, title, description, status, priority, project_id, created_by, assigned_to)
-```
+## Core Features
 
-### Routing Structure
+- Create and manage support tickets
+- Ticket status handling (open / closed)
+- User authentication
+- Authorization for ticket access
+- Clean separation of concerns
 
-**Customer Routes** (`/projects/*`, `/tickets/pending-approval`)
-- Projekt-Erstellung und -Verwaltung
-- Ticket-Erstellung in eigenen Projekten
-- Freigabe von Developer-Tickets
+---
 
-**Developer Routes** (`/firmas/*`, `/tickets/emergency`)
-- Firmen-Übersicht und -Details
-- Systemweite Ticket-Verwaltung
-- Notfall-Tickets (Priorität 4)
+## Tech Stack
 
-**Shared Routes** (`/tickets/{id}`, `/dashboard`)
-- Ticket-Details mit rollenbasierter Authorization
-- Dashboard mit Statistiken
+- Framework: Laravel 12
+- Language: PHP 8.2
+- Database: MySQL / SQLite
+- Authentication: Laravel Auth
+- Testing: Pest PHP
+- Styling: Blade + Tailwind CSS
 
-## 🚦 Workflow: Ticket-Freigabeprozess
+---
 
-1. **Developer** erstellt Ticket für Kunde
-   - Automatischer Status: `OPEN` (Benötigt Bestätigung)
-   - Ticket erscheint in Customer's "Zur Freigabe" Liste
+## Requirements
 
-2. **Customer** prüft Tickets zur Freigabe
-   - Navigation: "Zur Freigabe" im Sidebar-Menü
-   - Übersicht aller OPEN-Status Tickets
-   - Details-Ansicht und Freigabe-Button
+- PHP >= 8.2
+- Composer
+- Node.js >= 16
+- MySQL or SQLite
+- Git
 
-3. **Customer** gibt Ticket frei
-   - Status ändert sich: `OPEN` → `TODO`
-   - Ticket kann nun von Developern bearbeitet werden
+---
 
-4. **Alternatively**: Customer erstellt eigene Tickets
-   - Automatischer Status: `TODO` (bereits freigegeben)
-   - Keine Freigabe durch Developer nötig
+## Installation
 
-## 🛠️ Installation & Setup
+1) Clone the repository
 
-```bash
-# Repository klonen
-git clone <repository-url>
+git clone https://github.com/TorbenSt/tickets.git
 cd tickets
 
-# Dependencies installieren
+2) Install dependencies
+
 composer install
 npm install
 
-# Environment konfigurieren
+3) Environment setup
+
 cp .env.example .env
 php artisan key:generate
 
-# Database & Seeding
-php artisan migrate
-php artisan db:seed --class=TicketSystemSeeder
+4) Configure database
 
-# Assets builden
+Edit .env and set your database connection, for example:
+
+DB_CONNECTION=sqlite
+
+5) Run migrations and seed demo data
+
+php artisan migrate --seed
+
+6) Build frontend assets
+
 npm run build
+npm run dev
 
-# Development Server starten
+7) Start the development server
+
 php artisan serve
-```
 
-### Test Accounts
+The application is now available at:
+http://localhost:8000
 
-Nach dem Seeding stehen folgende Test-Accounts zur Verfügung:
+---
 
-**Developer Account:**
-- Email: `developer@test.com`
-- Password: `password`
+## Standard Users (after seeding)
 
-**Customer Accounts:**
-- Email: `customer@test.com` (Firma 1)
-- Email: `customer2@test.com` (Firma 2)
-- Password: `password`
+After running the database seeders, the following demo users are available:
 
-## 🔧 Entwicklung
+- Admin: admin@example.com / password
+- User: user@example.com / password
 
-### Key Models & Methods
+Note: These accounts exist for local development only.
 
-```php
-// User Role Checks
-$user->role->isDeveloper()
-$user->role->isCustomer()
+---
 
-// Project Access
-$project->hasUser($user)
-$project->users() // BelongsToMany relationship
+## Tests
 
-// Ticket Permissions
-$ticket->canBeEditedBy($user)
-$ticket->project->hasUser($user)
+This project uses Pest PHP for automated testing.
 
-// Firma Relationships
-$firma->projects()
-$firma->tickets() // HasManyThrough projects
-```
+./vendor/bin/pest
 
-### Enums & Business Logic
+---
 
-```php
-// Ticket Status Flow
-TicketStatus::OPEN      // Benötigt Bestätigung (orange)
-TicketStatus::TODO      // To Do (gray)
-TicketStatus::IN_PROGRESS // In Bearbeitung (blue)
-TicketStatus::REVIEW    // Review (yellow) 
-TicketStatus::DONE      // Fertig (green)
+## Project Structure
 
-// Priority System
-TicketPriority::UEBERPRUFUNG // Überprüfung (1)
-TicketPriority::NORMAL       // Normal (2)
-TicketPriority::ASAP         // ASAP (3)
-TicketPriority::NOTFALL      // Notfall (4)
-```
+app/
+├── Http/Controllers/
+├── Http/Requests/
+├── Models/
+└── Providers/
 
-### Security Features
+resources/
+├── views/
+└── css/
 
-- **Multi-Tenant Isolation**: Customers nur Zugriff auf eigene Firma
-- **Project-based Authorization**: Ticket-Zugriff basiert auf Projekt-Mitgliedschaft
-- **Role-based Middleware**: Automatische Route-Protection
-- **CSRF Protection**: Alle Formulare geschützt
-- **Model Authorization**: Controller-Level Permission Checks
+database/
+├── migrations/
+├── factories/
+└── seeders/
 
-## 📊 Monitoring & Analytics
+tests/
+├── Feature/
+└── Unit/
 
-Das System bietet Dashboard-Statistiken für:
-- Ticket-Counts nach Status
-- Projekt-Mitglieder Anzahl  
-- Offene Tickets pro Firma/Projekt
-- Priority-basierte Ticket-Verteilung
+---
 
-## 🔒 Security Considerations
+## Architectural Notes
 
-- Alle User-Eingaben validiert und escaped
-- SQL-Injection Prevention durch Eloquent ORM
-- XSS Protection durch Blade Template Engine
-- Route Model Binding mit automatischer Authorization
-- Session-based Authentication mit CSRF Token
+- Follows standard Laravel conventions
+- Clear separation between controllers, models and views
+- Predictable and readable codebase
+- No unnecessary abstractions
 
-## 📝 Contributing
+This repository intentionally demonstrates that not every problem requires
+a complex architecture.
 
-1. Feature Branch erstellen (`git checkout -b feature/amazing-feature`)
-2. Changes committen (`git commit -m 'Add amazing feature'`)
-3. Branch pushen (`git push origin feature/amazing-feature`)
-4. Pull Request erstellen
+---
 
-## 📄 License
+## Why this project exists
 
-Dieses Projekt ist unter der MIT License lizenziert.
+While other repositories showcase more advanced architecture or AI integration,
+this project highlights solid Laravel fundamentals and clean implementation
+of a common business use case.
+
+---
+
+## License
+
+This project is licensed under the MIT License.
